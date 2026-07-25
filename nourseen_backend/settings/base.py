@@ -76,14 +76,26 @@ TEMPLATES = [
 WSGI_APPLICATION = 'nourseen_backend.wsgi.application'
 
 # ---------------------------------------------------------------------------
-# Database (SQLite default — override DATABASE_URL in production)
+# Database (SQLite default — parses DATABASE_URL if configured for production)
 # ---------------------------------------------------------------------------
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = config('DATABASE_URL', default=None)
+
+if DATABASE_URL:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # ---------------------------------------------------------------------------
 # Password validation
