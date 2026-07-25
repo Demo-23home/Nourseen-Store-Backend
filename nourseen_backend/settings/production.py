@@ -6,8 +6,7 @@ from decouple import config, Csv
 
 DEBUG = False
 
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', cast=Csv(), default='')
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Security hardening
 SECURE_BROWSER_XSS_FILTER = True
