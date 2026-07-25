@@ -5,6 +5,7 @@ Shared configuration across all environments.
 Environment-specific values are loaded via python-decouple from .env file.
 """
 from pathlib import Path
+import sys
 from decouple import config, Csv
 
 # ---------------------------------------------------------------------------
@@ -82,8 +83,9 @@ WSGI_APPLICATION = 'nourseen_backend.wsgi.application'
 # Database (SQLite default — parses DATABASE_URL if configured for production)
 # ---------------------------------------------------------------------------
 DATABASE_URL = config('DATABASE_URL', default=None)
+IS_COLLECTSTATIC = 'collectstatic' in sys.argv
 
-if DATABASE_URL:
+if DATABASE_URL and not IS_COLLECTSTATIC:
     import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
@@ -96,7 +98,7 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': ':memory:' if IS_COLLECTSTATIC else BASE_DIR / 'db.sqlite3',
         }
     }
 
