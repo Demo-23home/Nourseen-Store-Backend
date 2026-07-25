@@ -86,33 +86,31 @@ WSGI_APPLICATION = 'nourseen_backend.wsgi.application'
 import os as _os
 
 # Read DATABASE_URL directly from environment, stripping any accidental surrounding quotes
-_DATABASE_URL = (_os.environ.get('DATABASE_URL') or '').strip().strip('"').strip("'")
+_DATABASE_URL = config('DATABASE_URL', default='').strip().strip('"').strip("'")
 IS_COLLECTSTATIC = 'collectstatic' in sys.argv
 
-if _DATABASE_URL and not IS_COLLECTSTATIC:
-    import dj_database_url
-    try:
-        DATABASES = {
-            'default': dj_database_url.parse(
-                _DATABASE_URL,
-                conn_max_age=600,
-                ssl_require=True
-            )
-        }
-    except ValueError:
-        # Fallback to SQLite if the DATABASE_URL cannot be parsed (e.g. during build)
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.sqlite3',
-                'NAME': BASE_DIR / 'db.sqlite3',
-            }
-        }
-else:
+if IS_COLLECTSTATIC:
+    # Use in-memory SQLite during build/collectstatic only (no DB access needed)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': ':memory:' if IS_COLLECTSTATIC else BASE_DIR / 'db.sqlite3',
+            'NAME': ':memory:',
         }
+    }
+else:
+    if not _DATABASE_URL:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured(
+            "DATABASE_URL environment variable is not set. "
+            "Set it in your .env file (locally) or in your Vercel environment variables (production)."
+        )
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(
+            _DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
     }
 
 # ---------------------------------------------------------------------------
