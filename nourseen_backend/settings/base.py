@@ -86,11 +86,11 @@ WSGI_APPLICATION = 'nourseen_backend.wsgi.application'
 DATABASE_URL = config('DATABASE_URL', default=None)
 IS_COLLECTSTATIC = 'collectstatic' in sys.argv
 
-if DATABASE_URL and not IS_COLLECTSTATIC:
+if DATABASE_URL and DATABASE_URL.strip() and not IS_COLLECTSTATIC:
     import dj_database_url
     DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
+        'default': dj_database_url.parse(
+            DATABASE_URL,
             conn_max_age=600,
             ssl_require=True
         )
