@@ -83,18 +83,30 @@ WSGI_APPLICATION = 'nourseen_backend.wsgi.application'
 # ---------------------------------------------------------------------------
 # Database (SQLite default — parses DATABASE_URL if configured for production)
 # ---------------------------------------------------------------------------
-DATABASE_URL = config('DATABASE_URL', default=None)
+import os as _os
+
+# Read DATABASE_URL directly from environment, stripping any accidental surrounding quotes
+_DATABASE_URL = (_os.environ.get('DATABASE_URL') or '').strip().strip('"').strip("'")
 IS_COLLECTSTATIC = 'collectstatic' in sys.argv
 
-if DATABASE_URL and DATABASE_URL.strip() and not IS_COLLECTSTATIC:
+if _DATABASE_URL and not IS_COLLECTSTATIC:
     import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True
-        )
-    }
+    try:
+        DATABASES = {
+            'default': dj_database_url.parse(
+                _DATABASE_URL,
+                conn_max_age=600,
+                ssl_require=True
+            )
+        }
+    except ValueError:
+        # Fallback to SQLite if the DATABASE_URL cannot be parsed (e.g. during build)
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 else:
     DATABASES = {
         'default': {
